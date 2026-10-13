@@ -16,9 +16,16 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/mster429/web-page-analyzer/internal/adapter/fetch"
+	"github.com/mster429/web-page-analyzer/internal/adapter/linkcheck"
+	"github.com/mster429/web-page-analyzer/internal/adapter/linkstore"
 	"github.com/mster429/web-page-analyzer/internal/adapter/web"
 	"github.com/mster429/web-page-analyzer/internal/analysis"
 	"github.com/mster429/web-page-analyzer/internal/config"
+)
+
+const (
+	linkStoreSize = 1000
+	linkStoreTTL  = 2 * time.Minute
 )
 
 type App struct {
@@ -45,7 +52,9 @@ func New() (*App, error) {
 
 	client := &http.Client{}
 	fetcher := fetch.New(client, cfg.PageFetchTimeout, int64(cfg.PageSizeLimitMB)<<20)
-	service := analysis.NewService(fetcher)
+	checker := linkcheck.New(client, cfg.LinkCheckWorkers, cfg.SingleLinkCheckTimeout)
+	store := linkstore.New(linkStoreSize, linkStoreTTL)
+	service := analysis.NewService(fetcher, checker, store, cfg.TotalLinkCheckTimeout)
 	pages := web.New(service)
 
 	mux := http.NewServeMux()
@@ -56,6 +65,7 @@ func New() (*App, error) {
 		w.WriteHeader(http.StatusOK)
 	})
 	mux.HandleFunc("GET /analyze", pages.Analyze)
+	mux.HandleFunc("GET /analyze/links", pages.Links)
 
 	if cfg.EnableProfiling {
 		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
@@ -70,7 +80,7 @@ func New() (*App, error) {
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 		// has to be longer than the slowest fetch
-		WriteTimeout: cfg.PageFetchTimeout + 10*time.Second,
+		WriteTimeout: max(cfg.PageFetchTimeout, cfg.TotalLinkCheckTimeout) + 10*time.Second,
 	}
 
 	return &App{cfg: cfg, logger: logger, registry: registry, server: server}, nil

@@ -8,6 +8,7 @@ type Result struct {
 	Headings     []HeadingCount
 	Links        LinkCounts
 	HasLoginForm bool
+	LinkCheckID  string // the page asks for the link check with this, empty when there are no links
 }
 
 type HeadingCount struct {
@@ -23,6 +24,6 @@ type LinkCounts struct {
 type LinkCheck struct {
 	Internal     int
 	External     int
-	Inaccessible int
-	TimedOut     int
+	Inaccessible []string // unique addresses, sorted
+	TimedOut     []string // unique addresses, sorted
 }

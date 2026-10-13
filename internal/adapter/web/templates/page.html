@@ -52,6 +52,78 @@
       </ul>
     </section>
     {{end}}
+
+    {{if .Result}}{{template "links" .Links}}{{end}}
   </main>
 </body>
 </html>
+
+{{define "links"}}
+<section class="card" id="links">
+  <h2>Links</h2>
+  {{if .Note}}
+  <p class="muted">{{.Note}}</p>
+  {{else}}
+  <ul class="tiles tiles-4">
+    <li{{if not .Internal}} class="zero"{{end}}>
+      <span class="count">{{.Internal}}</span>
+      <span class="label">internal</span>
+    </li>
+    <li{{if not .External}} class="zero"{{end}}>
+      <span class="count">{{.External}}</span>
+      <span class="label">external</span>
+    </li>
+    {{if .Checked}}
+    <li{{if not .Inaccessible}} class="zero"{{end}}>
+      <span class="count">{{len .Inaccessible}}</span>
+      <span class="label">inaccessible</span>
+    </li>
+    <li{{if not .TimedOut}} class="zero"{{end}}>
+      <span class="count">{{len .TimedOut}}</span>
+      <span class="label">timed out</span>
+    </li>
+    {{else}}
+    <li class="pending">
+      <span class="count">…</span>
+      <span class="label">inaccessible</span>
+    </li>
+    <li class="pending">
+      <span class="count">…</span>
+      <span class="label">timed out</span>
+    </li>
+    {{end}}
+  </ul>
+  {{if .Checked}}
+  <p class="note">Internal and external count every link on the page. Inaccessible and timed out count each address once.</p>
+  {{if .Inaccessible}}
+  <details>
+    <summary>Inaccessible links ({{len .Inaccessible}})</summary>
+    <ul class="link-list">
+      {{range .Inaccessible}}<li><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></li>
+      {{end}}
+    </ul>
+  </details>
+  {{end}}
+  {{if .TimedOut}}
+  <details>
+    <summary>Timed out links ({{len .TimedOut}})</summary>
+    <ul class="link-list">
+      {{range .TimedOut}}<li><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></li>
+      {{end}}
+    </ul>
+  </details>
+  {{end}}
+  {{else}}
+  <p class="note" id="links-status">Checking the links, this can take a few seconds…</p>
+  <script>
+    fetch("/analyze/links?id=" + encodeURIComponent({{.CheckID}}))
+      .then(function (response) { return response.text(); })
+      .then(function (html) { document.getElementById("links").outerHTML = html; })
+      .catch(function () {
+        document.getElementById("links-status").textContent = "The links could not be checked.";
+      });
+  </script>
+  {{end}}
+  {{end}}
+</section>
+{{end}}
