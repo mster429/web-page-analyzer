@@ -35,4 +35,9 @@ func (h *Handler) Analyze(w http.ResponseWriter, r *http.Request) {
 
 	// plain text until the templates are added
 	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\nTitle: %s\n", result.URL, result.HTMLVersion, result.Title)
+	_, _ = fmt.Fprintf(w, "Login form: %t\n", result.HasLoginForm)
+	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\nTitle: %s\n", result.URL, result.HTMLVersion, result.Title)
+	for _, h := range result.Headings {
+		_, _ = fmt.Fprintf(w, "h%d: %d\n", h.Level, h.Count)
+	}
 }

@@ -37,10 +37,11 @@ func (s *Service) Analyze(ctx context.Context, rawURL string) (Result, error) {
 	}
 
 	return Result{
-		URL:         page.URL.String(),
-		HTMLVersion: doc.HTMLVersion,
-		Title:       doc.Title,
-		Headings:    doc.Headings,
+		URL:          page.URL.String(),
+		HTMLVersion:  doc.HTMLVersion,
+		Title:        doc.Title,
+		Headings:     doc.Headings,
+		HasLoginForm: doc.HasLoginForm,
 	}, nil
 }
 

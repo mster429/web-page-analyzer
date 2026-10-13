@@ -12,9 +12,10 @@ import (
 )
 
 type Document struct {
-	HTMLVersion string
-	Title       string
-	Headings    []HeadingCount
+	HTMLVersion  string
+	Title        string
+	Headings     []HeadingCount
+	HasLoginForm bool
 }
 
 const (
@@ -72,8 +73,11 @@ func ParseHTML(body []byte, pageURL *url.URL) (Document, error) {
 		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
 			level := int(node.Data[1] - '0') // "h3" -> 3
 			headings[level-1]++
+		case atom.Form:
+			if isLoginForm(node) {
+				doc.HasLoginForm = true
+			}
 		}
-
 	}
 	for i, count := range headings {
 		doc.Headings = append(doc.Headings, HeadingCount{Level: i + 1, Count: count})
@@ -111,4 +115,25 @@ func text(node *html.Node) string {
 	}
 	//all whitespaces reduced to single spaces
 	return strings.Join(strings.Fields(node.FirstChild.Data), " ")
+}
+
+// isLoginForm reports whether form has exactly one password field.
+// Two or more may be a sign-up or change-password form.
+func isLoginForm(form *html.Node) bool {
+	passwords := 0
+	for formNode := range form.Descendants() {
+		if formNode.DataAtom == atom.Input && strings.EqualFold(getAttributeValue(formNode, "type"), "password") {
+			passwords++
+		}
+	}
+	return passwords == 1
+}
+
+func getAttributeValue(node *html.Node, key string) string {
+	for _, attr := range node.Attr {
+		if attr.Key == key {
+			return attr.Val
+		}
+	}
+	return ""
 }
