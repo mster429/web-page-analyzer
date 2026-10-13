@@ -1,3 +1,4 @@
+// Package linkstore keeps the links of a page in memory for a short time.
 package linkstore
 
 import (
@@ -9,10 +10,12 @@ import (
 	"github.com/mster429/web-page-analyzer/internal/analysis"
 )
 
+// Store is an in-memory store. Entries expire
 type Store struct {
 	cache *expirable.LRU[string, []analysis.Link]
 }
 
+// New returns a Store that holds page links.
 func New(size int, ttl time.Duration) *Store {
 	return &Store{cache: expirable.NewLRU[string, []analysis.Link](size, nil, ttl)}
 }

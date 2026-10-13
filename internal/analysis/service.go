@@ -16,6 +16,7 @@ var ErrInvalidURL = errors.New("invalid URL")
 // ErrLinksExpired is returned when the links of a page are no longer in the store.
 var ErrLinksExpired = errors.New("links expired")
 
+// Service runs the analysis of a page.
 type Service struct {
 	fetcher          PageFetcher
 	checker          LinkChecker
@@ -23,6 +24,7 @@ type Service struct {
 	linkCheckTimeout time.Duration
 }
 
+// NewService returns a Service.
 func NewService(fetcher PageFetcher, checker LinkChecker, store LinkStore, linkCheckTimeout time.Duration) *Service {
 	return &Service{fetcher: fetcher, checker: checker, store: store, linkCheckTimeout: linkCheckTimeout}
 }
@@ -60,6 +62,7 @@ func (s *Service) Analyze(ctx context.Context, rawURL string) (Result, error) {
 	return result, nil
 }
 
+// CheckLinks requests the links saved under id and reports the ones that failed.
 func (s *Service) CheckLinks(ctx context.Context, id string) (LinkCheck, error) {
 	links, ok := s.store.FetchAndDelete(id)
 	if !ok {

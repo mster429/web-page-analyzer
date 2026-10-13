@@ -1,3 +1,4 @@
+// Package app builds the application and runs it.
 package app
 
 import (
@@ -28,6 +29,7 @@ const (
 	linkStoreTTL  = 2 * time.Minute
 )
 
+// App holds what the server needs to run.
 type App struct {
 	cfg      config.Config
 	logger   zerolog.Logger
@@ -85,6 +87,7 @@ func New() (*App, error) {
 	return &App{cfg: cfg, logger: logger, registry: registry, server: server}, nil
 }
 
+// Run serves until ctx is canceled, then shuts down gracefully.
 func (a *App) Run(ctx context.Context) error {
 	var listenConfig net.ListenConfig
 	listener, err := listenConfig.Listen(ctx, "tcp", a.cfg.HostPort)

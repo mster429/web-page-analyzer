@@ -1,3 +1,4 @@
+// Package fetch downloads the page to analyze.
 package fetch
 
 import (

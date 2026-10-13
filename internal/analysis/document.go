@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
+// Document is what ParseHTML reads from a page.
 type Document struct {
 	HTMLVersion  string
 	Title        string
@@ -19,6 +20,7 @@ type Document struct {
 	Links        []Link
 }
 
+// Link is one <a href> on the page.
 type Link struct {
 	URL        string
 	IsInternal bool
@@ -123,7 +125,7 @@ func text(node *html.Node) string {
 	if node.FirstChild == nil || node.FirstChild.Type != html.TextNode {
 		return ""
 	}
-	//all whitespaces reduced to single spaces
+	// all whitespaces reduced to single spaces
 	return strings.Join(strings.Fields(node.FirstChild.Data), " ")
 }
 

@@ -1,4 +1,4 @@
-// Package linkcheck finds out which links cannot be reached.
+// Package linkcheck finds out which links can/cannot be reached.
 package linkcheck
 
 import (
@@ -25,12 +25,14 @@ type result struct {
 	outcome outcome
 }
 
+// Checker checks links concurrently with a pool of workers.
 type Checker struct {
 	client  *http.Client
 	workers int
 	timeout time.Duration
 }
 
+// New returns a Checker with the given number of workers and a timeout per link.
 func New(client *http.Client, workers int, timeout time.Duration) *Checker {
 	return &Checker{client: client, workers: workers, timeout: timeout}
 }
