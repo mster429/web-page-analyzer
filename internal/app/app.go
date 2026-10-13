@@ -49,6 +49,8 @@ func New() (*App, error) {
 	pages := web.New(service)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", pages.Index)
+	mux.Handle("GET /static/", pages.Static())
 	mux.Handle("GET /metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

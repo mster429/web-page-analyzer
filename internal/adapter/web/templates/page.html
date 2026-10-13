@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{if .Result}}{{.Result.Title}} · {{end}}Web Page Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main>
+    <header class="search{{if not (or .Result .Error)}} search-empty{{end}}">
+      <h1><a href="/">Web Page Analyzer</a></h1>
+      <p class="hint">Enter the address of a web page to see what it is made of.</p>
+      <form action="/analyze" method="get">
+        <input type="url" name="url" value="{{.URL}}" placeholder="https://example.com"
+               aria-label="Page address" required autofocus>
+        <button type="submit">Analyze</button>
+      </form>
+    </header>
+
+    {{with .Error}}
+    <section class="card error">
+      <h2>{{.Status}}</h2>
+      <p>{{.Description}}</p>
+    </section>
+    {{end}}
+
+    {{with .Result}}
+    <section class="card">
+      <h2>Summary</h2>
+      <dl>
+        <dt>Address</dt>
+        <dd><a href="{{.URL}}" rel="noopener noreferrer">{{.URL}}</a></dd>
+        <dt>HTML version</dt>
+        <dd>{{.HTMLVersion}}</dd>
+        <dt>Title</dt>
+        <dd>{{if .Title}}{{.Title}}{{else}}<span class="muted">none</span>{{end}}</dd>
+        <dt>Login form</dt>
+        <dd>{{if .HasLoginForm}}Yes{{else}}No{{end}}</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Headings</h2>
+      <ul class="tiles">
+        {{range .Headings}}
+        <li{{if not .Count}} class="zero"{{end}}>
+          <span class="count">{{.Count}}</span>
+          <span class="label">h{{.Level}}</span>
+        </li>
+        {{end}}
+      </ul>
+    </section>
+    {{end}}
+  </main>
+</body>
+</html>

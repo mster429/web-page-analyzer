@@ -22,23 +22,40 @@ func New(analyzer Analyzer) *Handler {
 	return &Handler{analyzer: analyzer}
 }
 
+// Index shows the empty form.
+func (h *Handler) Index(w http.ResponseWriter, _ *http.Request) {
+	render(w, http.StatusOK, pageData{})
+}
+
 // Analyze handles GET /analyze?url=...
 func (h *Handler) Analyze(w http.ResponseWriter, r *http.Request) {
-	result, err := h.analyzer.Analyze(r.Context(), r.URL.Query().Get("url"))
+	rawURL := r.URL.Query().Get("url")
+
+	result, err := h.analyzer.Analyze(r.Context(), rawURL)
 	if errors.Is(err, analysis.ErrInvalidURL) {
-		http.Error(w, "enter a full address starting with http:// or https://", http.StatusBadRequest)
+		h.renderError(w, rawURL, http.StatusBadRequest,
+			"Enter a full address that starts with http:// or https://.")
 		return
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		h.renderError(w, rawURL, http.StatusBadGateway, "The page could not be reached.")
 		return
 	}
 
-	// plain text until the templates are added
-	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\nTitle: %s\n", result.URL, result.HTMLVersion, result.Title)
-	_, _ = fmt.Fprintf(w, "Login form: %t\n", result.HasLoginForm)
-	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\nTitle: %s\n", result.URL, result.HTMLVersion, result.Title)
-	for _, h := range result.Headings {
-		_, _ = fmt.Fprintf(w, "h%d: %d\n", h.Level, h.Count)
-	}
+	render(w, http.StatusOK, pageData{URL: rawURL, Result: &result})
+}
+
+func (h *Handler) renderError(w http.ResponseWriter, rawURL string, status int, description string) {
+	render(w, status, pageData{
+		URL: rawURL,
+		Error: &pageError{
+			Status:      fmt.Sprintf("%d %s", status, http.StatusText(status)),
+			Description: description,
+		},
+	})
+}
+
+// Static serves the stylesheet.
+func (h *Handler) Static() http.Handler {
+	return http.FileServerFS(staticFS)
 }
