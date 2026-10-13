@@ -40,6 +40,7 @@ func (s *Service) Analyze(ctx context.Context, rawURL string) (Result, error) {
 		URL:         page.URL.String(),
 		HTMLVersion: doc.HTMLVersion,
 		Title:       doc.Title,
+		Headings:    doc.Headings,
 	}, nil
 }
 

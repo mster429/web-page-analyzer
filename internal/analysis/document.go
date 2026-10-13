@@ -14,6 +14,7 @@ import (
 type Document struct {
 	HTMLVersion string
 	Title       string
+	Headings    []HeadingCount
 }
 
 const (
@@ -51,6 +52,8 @@ func ParseHTML(body []byte, pageURL *url.URL) (Document, error) {
 	}
 
 	doc := Document{HTMLVersion: versionUnknown}
+	var headings [6]int
+
 	for node := range root.Descendants() {
 		if node.Type == html.DoctypeNode {
 			doc.HTMLVersion = htmlVersion(node)
@@ -66,8 +69,14 @@ func ParseHTML(body []byte, pageURL *url.URL) (Document, error) {
 			if doc.Title == "" {
 				doc.Title = text(node)
 			}
+		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
+			level := int(node.Data[1] - '0') // "h3" -> 3
+			headings[level-1]++
 		}
 
+	}
+	for i, count := range headings {
+		doc.Headings = append(doc.Headings, HeadingCount{Level: i + 1, Count: count})
 	}
 
 	return doc, nil
