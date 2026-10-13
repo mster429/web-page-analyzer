@@ -95,6 +95,9 @@
   </ul>
   {{if .Checked}}
   <p class="note">Internal and external count every link on the page. Inaccessible and timed out count each address once.</p>
+  {{if .NotChecked}}
+  <p class="note">{{.NotChecked}} {{if eq .NotChecked 1}}link was{{else}}links were{{end}} not checked because the time for the check ran out.</p>
+  {{end}}
   {{if .Inaccessible}}
   <details>
     <summary>Inaccessible links ({{len .Inaccessible}})</summary>

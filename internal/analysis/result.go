@@ -26,4 +26,5 @@ type LinkCheck struct {
 	External     int
 	Inaccessible []string // unique addresses, sorted
 	TimedOut     []string // unique addresses, sorted
+	NotChecked   int      // links left when the time for the check ran out
 }

@@ -34,6 +34,7 @@ type linksData struct {
 	External     int
 	Inaccessible []string
 	TimedOut     []string
+	NotChecked   int
 	Checked      bool   // false while the link check is still running
 	CheckID      string // set while pending; the script asks for the result with it
 	Note         string // shown when the links could not be checked

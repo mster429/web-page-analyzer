@@ -7,6 +7,7 @@ type LinkChecker interface {
 }
 
 type LinkReport struct {
+	Checked      int // links that got an answer one way or the other
 	Inaccessible []string
 	TimedOut     []string
 }

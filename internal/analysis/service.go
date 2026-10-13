@@ -90,6 +90,7 @@ func (s *Service) CheckLinks(ctx context.Context, id string) (LinkCheck, error) 
 		External:     counts.External,
 		Inaccessible: report.Inaccessible,
 		TimedOut:     report.TimedOut,
+		NotChecked:   len(unique) - report.Checked,
 	}, nil
 }
 

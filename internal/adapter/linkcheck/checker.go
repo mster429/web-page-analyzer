@@ -78,6 +78,7 @@ func (c *Checker) Check(ctx context.Context, links []string) analysis.LinkReport
 
 	var report analysis.LinkReport
 	for r := range results {
+		report.Checked++
 		switch r.outcome {
 		case inaccessible:
 			report.Inaccessible = append(report.Inaccessible, r.link)
