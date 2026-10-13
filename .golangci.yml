@@ -1,0 +1,19 @@
+version: "2"
+
+linters:
+  default: standard     # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - revive            # naming and style, e.g. pageUrl should be pageURL
+    - misspell          # typos in comments and strings
+    - errorlint         # correct use of errors.Is / errors.As / %w
+    - bodyclose         # HTTP response bodies that are never closed
+    - noctx             # HTTP requests sent without a context
+    - gocritic          # a broad set of correctness and style checks
+    - gosec             # security problems, e.g. weak crypto or unsafe file and network use
+    - unconvert         # type conversions that are not needed
+    - gocyclo           # functions that are too complex
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
