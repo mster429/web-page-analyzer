@@ -16,6 +16,12 @@ type Document struct {
 	Title        string
 	Headings     []HeadingCount
 	HasLoginForm bool
+	Links        []Link
+}
+
+type Link struct {
+	URL        string
+	IsInternal bool
 }
 
 const (
@@ -77,6 +83,10 @@ func ParseHTML(body []byte, pageURL *url.URL) (Document, error) {
 			if isLoginForm(node) {
 				doc.HasLoginForm = true
 			}
+		case atom.A:
+			if link, ok := resolveLink(node, pageURL); ok {
+				doc.Links = append(doc.Links, link)
+			}
 		}
 	}
 	for i, count := range headings {
@@ -136,4 +146,32 @@ func getAttributeValue(node *html.Node, key string) string {
 		}
 	}
 	return ""
+}
+
+// resolveLink turns the href of anchor tag into an absolute link.
+// It returns false for anything that is not an http or https address.
+func resolveLink(anchor *html.Node, pageURL *url.URL) (Link, bool) {
+	href := strings.TrimSpace(getAttributeValue(anchor, "href"))
+	if href == "" {
+		return Link{}, false
+	}
+
+	// Parse resolves relative addresses like /about against the page
+	target, err := pageURL.Parse(href)
+	if err != nil {
+		return Link{}, false
+	}
+	if target.Scheme != "http" && target.Scheme != "https" {
+		return Link{}, false
+	}
+
+	// the fragment never reaches the server
+	target.Fragment = ""
+
+	return Link{URL: target.String(), IsInternal: site(target) == site(pageURL)}, true
+}
+
+// site returns the host without the port and without a leading "www."
+func site(u *url.URL) string {
+	return strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
 }

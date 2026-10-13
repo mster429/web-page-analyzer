@@ -12,6 +12,7 @@ import (
 // Analyzer is the part of the core the pages use.
 type Analyzer interface {
 	Analyze(ctx context.Context, rawURL string) (analysis.Result, error)
+	CheckLinks(ctx context.Context, id string) (analysis.LinkCheck, error)
 }
 
 type Handler struct {
@@ -43,6 +44,27 @@ func (h *Handler) Analyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render(w, http.StatusOK, pageData{URL: rawURL, Result: &result})
+}
+
+// Links handles GET /analyze/links?id=... It returns only the link section,
+func (h *Handler) Links(w http.ResponseWriter, r *http.Request) {
+	check, err := h.analyzer.CheckLinks(r.Context(), r.URL.Query().Get("id"))
+	if errors.Is(err, analysis.ErrLinksExpired) {
+		renderLinks(w, http.StatusNotFound, linksData{Note: "This result has expired. Analyze the page again to check its links."})
+		return
+	}
+	if err != nil {
+		renderLinks(w, http.StatusInternalServerError, linksData{Note: "The links could not be checked."})
+		return
+	}
+
+	renderLinks(w, http.StatusOK, linksData{
+		Internal:     check.Internal,
+		External:     check.External,
+		Inaccessible: check.Inaccessible,
+		TimedOut:     check.TimedOut,
+		Checked:      true,
+	})
 }
 
 func (h *Handler) renderError(w http.ResponseWriter, rawURL string, status int, description string) {
