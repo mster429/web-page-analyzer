@@ -1,3 +1,4 @@
+// Package config loads the settings from environment variables.
 package config
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Config holds the settings of the application.
 type Config struct {
 	HostPort               string
 	PageFetchTimeout       time.Duration

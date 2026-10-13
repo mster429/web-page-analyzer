@@ -1,3 +1,4 @@
+// Package web serves the pages of the application.
 package web
 
 import (
@@ -19,12 +20,14 @@ type Analyzer interface {
 	CheckLinks(ctx context.Context, id string) (analysis.LinkCheck, error)
 }
 
+// Handler serves the form, the result page and the link check.
 type Handler struct {
 	analyzer Analyzer
 	logger   zerolog.Logger
 	metrics  *metrics
 }
 
+// New returns a Handler and registers its metrics on registry.
 func New(analyzer Analyzer, logger zerolog.Logger, registry prometheus.Registerer) *Handler {
 	return &Handler{analyzer: analyzer, logger: logger, metrics: newMetrics(registry)}
 }
