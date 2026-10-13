@@ -1,0 +1,13 @@
+services:
+  analyzer:
+    build: .
+    image: web-page-analyzer:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST_PORT: ":8080"
+    stop_grace_period: 40s
+    restart: unless-stopped
