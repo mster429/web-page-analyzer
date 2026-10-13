@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 type Document struct {
 	HTMLVersion string
+	Title       string
 }
 
 const (
@@ -54,6 +56,18 @@ func ParseHTML(body []byte, pageURL *url.URL) (Document, error) {
 			doc.HTMLVersion = htmlVersion(node)
 		}
 
+		if node.Type != html.ElementNode {
+			continue
+		}
+
+		switch node.DataAtom {
+		case atom.Title:
+			// the first non-empty title
+			if doc.Title == "" {
+				doc.Title = text(node)
+			}
+		}
+
 	}
 
 	return doc, nil
@@ -79,4 +93,13 @@ func htmlVersion(doctype *html.Node) string {
 	}
 
 	return versionUnknown
+}
+
+// text returns the text of node with whitespaces reduced to single spaces.
+func text(node *html.Node) string {
+	if node.FirstChild == nil || node.FirstChild.Type != html.TextNode {
+		return ""
+	}
+	//all whitespaces reduced to single spaces
+	return strings.Join(strings.Fields(node.FirstChild.Data), " ")
 }

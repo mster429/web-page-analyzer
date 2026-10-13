@@ -34,5 +34,5 @@ func (h *Handler) Analyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// plain text until the templates are added
-	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\n", result.URL, result.HTMLVersion)
+	_, _ = fmt.Fprintf(w, "URL: %s\nHTML version: %s\nTitle: %s\n", result.URL, result.HTMLVersion, result.Title)
 }
