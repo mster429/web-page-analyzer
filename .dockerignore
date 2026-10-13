@@ -1,0 +1,10 @@
+.git
+.idea
+bin
+.env
+*.md
+*.out
+Dockerfile
+docker-compose.yml
+.dockerignore
+.golangci.yml

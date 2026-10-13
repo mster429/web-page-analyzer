@@ -17,12 +17,11 @@ type Config struct {
 	TotalLinkCheckTimeout  time.Duration
 	LinkCheckWorkers       int
 	PageSizeLimitMB        int
-	AllowPrivateAddresses  bool
 	EnableProfiling        bool
 	LogLevel               zerolog.Level
 }
 
-// Load reads .env file and loads values to config variables
+// Load reads environment variables loads values those to variables
 // if a variable is not set or empty, a default value is assigned
 func Load() (Config, error) {
 	var c Config
@@ -52,10 +51,6 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
-	c.AllowPrivateAddresses, err = envBool("ALLOW_PRIVATE_ADDRESSES", false)
-	if err != nil {
-		return Config{}, err
-	}
 	c.EnableProfiling, err = envBool("ENABLE_PPROF", true)
 	if err != nil {
 		return Config{}, err
