@@ -16,9 +16,16 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/mster429/web-page-analyzer/internal/adapter/fetch"
+	"github.com/mster429/web-page-analyzer/internal/adapter/linkcheck"
+	"github.com/mster429/web-page-analyzer/internal/adapter/linkstore"
 	"github.com/mster429/web-page-analyzer/internal/adapter/web"
 	"github.com/mster429/web-page-analyzer/internal/analysis"
 	"github.com/mster429/web-page-analyzer/internal/config"
+)
+
+const (
+	linkStoreSize = 1000
+	linkStoreTTL  = 2 * time.Minute
 )
 
 type App struct {
