@@ -1,4 +1,4 @@
-module web-analyzer
+module github.com/mster429/web-page-analyzer
 
 go 1.27
 

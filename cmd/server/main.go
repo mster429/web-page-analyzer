@@ -1,4 +1,4 @@
-// starts the web analyzer server
+// starts the web page analyzer server
 package main
 
 import (
@@ -7,9 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"web-analyzer/internal/app"
 
 	"github.com/rs/zerolog"
+
+	"github.com/mster429/web-page-analyzer/internal/app"
 )
 
 func main() {

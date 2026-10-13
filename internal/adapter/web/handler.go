@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"web-analyzer/internal/analysis"
+
+	"github.com/mster429/web-page-analyzer/internal/analysis"
 )
 
 // Analyzer is the part of the core the pages use.

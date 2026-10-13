@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-	"web-analyzer/internal/analysis"
+
+	"github.com/mster429/web-page-analyzer/internal/analysis"
 )
 
 // Fetcher downloads pages over HTTP.

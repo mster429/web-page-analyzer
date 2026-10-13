@@ -9,15 +9,16 @@ import (
 	"net/http/pprof"
 	"os"
 	"time"
-	"web-analyzer/internal/adapter/fetch"
-	"web-analyzer/internal/adapter/web"
-	"web-analyzer/internal/analysis"
-	"web-analyzer/internal/config"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
+
+	"github.com/mster429/web-page-analyzer/internal/adapter/fetch"
+	"github.com/mster429/web-page-analyzer/internal/adapter/web"
+	"github.com/mster429/web-page-analyzer/internal/analysis"
+	"github.com/mster429/web-page-analyzer/internal/config"
 )
 
 type App struct {
