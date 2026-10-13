@@ -55,7 +55,7 @@ func New() (*App, error) {
 	checker := linkcheck.New(client, cfg.LinkCheckWorkers, cfg.SingleLinkCheckTimeout)
 	store := linkstore.New(linkStoreSize, linkStoreTTL)
 	service := analysis.NewService(fetcher, checker, store, cfg.TotalLinkCheckTimeout)
-	pages := web.New(service)
+	pages := web.New(service, logger, registry)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", pages.Index)
@@ -76,11 +76,10 @@ func New() (*App, error) {
 	}
 
 	server := &http.Server{
-		Handler:           mux,
+		Handler:           pages.Middleware(mux),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
-		// has to be longer than the slowest fetch
-		WriteTimeout: max(cfg.PageFetchTimeout, cfg.TotalLinkCheckTimeout) + 10*time.Second,
+		WriteTimeout:      max(cfg.PageFetchTimeout, cfg.TotalLinkCheckTimeout) + 10*time.Second,
 	}
 
 	return &App{cfg: cfg, logger: logger, registry: registry, server: server}, nil
