@@ -96,6 +96,12 @@ a { color: #1d4ed8; }
 
 .card p { margin: 0; }
 
+.card .note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #616e7c;
+}
+
 dl {
   display: grid;
   grid-template-columns: 140px 1fr;
@@ -155,4 +161,43 @@ dd {
   dl { grid-template-columns: 1fr; gap: 0; }
   dd { margin-bottom: 8px; }
   .tiles { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* link section */
+.tiles-4 { grid-template-columns: repeat(4, 1fr); }
+
+.tiles .pending .count {
+  color: #9aa5b1;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.3; }
+}
+
+@media (max-width: 520px) {
+  .tiles-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* the failed links, collapsed until opened */
+details {
+  margin-top: 12px;
+  border-top: 1px solid #e4e7eb;
+  padding-top: 12px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.link-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.link-list li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
 }
