@@ -217,13 +217,49 @@ Other
 
 ## Testing
 
-TODO: this section must be completed once the tests are written.
-
 ```bash
 make test     # unit tests with the race detector
 make cover    # the same, with the total coverage
 make lint     # golangci-lint
 ```
+
+Total statement coverage is 95.6%.
+
+| Package | Coverage | What is tested |
+|---|---|---|
+| `internal/analysis` | 98.1% | the parser with HTML strings as input, and the service with a fake fetcher, checker and store |
+| `internal/adapter/fetch` | 100% | status codes, content types, the size limit, redirects, and each kind of failure |
+| `internal/adapter/linkcheck` | 100% | outcomes per link, `HEAD` then `GET`, the worker limit, stopping when time runs out |
+| `internal/adapter/linkstore` | 100% | save and fetch, single use, expiry, dropping the oldest entry when full |
+| `internal/adapter/web` | 97.1% | every page and error page, the link section, request metrics and log, panic recovery |
+| `internal/config` | 100% | defaults, every variable, and each invalid value |
+| `internal/app` | 93.5% | the routes, and starting and stopping the server |
+
+No unit test makes a real HTTP request. The fetcher and the link checker are given a fake `http.RoundTripper`,
+so requests never leave the process, and the handlers are called directly with `httptest.NewRecorder`. The one
+test that opens a port, for graceful shutdown, listens on a free local port and sends nothing to it.
+
+There are no integration tests yet. The plan is to put them behind a build tag (`-tags integration`) and run the
+whole application against an `httptest.Server` serving fixture pages, as a fourth CI job.
+
+### Continuous integration
+
+Every pull request to `main` runs three checks in GitHub Actions
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
+
+| Check | What it does |
+|---|---|
+| `lint` | runs `golangci-lint` with the settings in `.golangci.yml` |
+| `test` | runs the unit tests with the race detector, and fails when total coverage is below 70% |
+| `docker` | builds the Docker image |
+
+**The `test` check needs at least 70% unit test coverage to pass.** It measures the total statement coverage of
+all packages, the same number `make cover` prints, and fails the pull request when it is lower.
+
+`main` is protected: all three checks are required, so a pull request cannot be merged while one of them fails.
+The screenshot shows a pull request blocked by a failing `test` check.
+
+![A pull request blocked by a failing check](docs/ci-checks.png)
 
 ## Challenges
 

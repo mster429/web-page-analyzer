@@ -29,11 +29,12 @@ type FetchError struct {
 	Err        error
 }
 
+// Error gives the reason shown to the user, followed by the underlying cause when there is one.
 func (e *FetchError) Error() string {
-	if e.StatusCode != 0 {
-		return fmt.Sprintf("fetch page: status %d", e.StatusCode)
+	if e.Err != nil {
+		return fmt.Sprintf("fetch page: %s (%v)", e.Reason, e.Err)
 	}
-	return fmt.Sprintf("fetch page: %v", e.Err)
+	return "fetch page: " + e.Reason
 }
 
 func (e *FetchError) Unwrap() error {
