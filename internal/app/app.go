@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"web-analyzer/internal/adapter/fetch"
+	"web-analyzer/internal/adapter/web"
+	"web-analyzer/internal/analysis"
 	"web-analyzer/internal/config"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,16 +41,24 @@ func New() (*App, error) {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
+	client := &http.Client{}
+	fetcher := fetch.New(client, cfg.PageFetchTimeout, int64(cfg.PageSizeLimitMB)<<20)
+	service := analysis.NewService(fetcher)
+	pages := web.New(service)
+
 	mux := http.NewServeMux()
 	mux.Handle("GET /metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+	mux.HandleFunc("GET /analyze", pages.Analyze)
 
 	server := &http.Server{
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
+		// has to be longer than the slowest fetch
+		WriteTimeout: cfg.PageFetchTimeout + 10*time.Second,
 	}
 
 	return &App{cfg: cfg, logger: logger, registry: registry, server: server}, nil
