@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"time"
 	"web-analyzer/internal/adapter/fetch"
@@ -52,6 +53,14 @@ func New() (*App, error) {
 		w.WriteHeader(http.StatusOK)
 	})
 	mux.HandleFunc("GET /analyze", pages.Analyze)
+
+	if cfg.EnableProfiling {
+		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+	}
 
 	server := &http.Server{
 		Handler:           mux,
