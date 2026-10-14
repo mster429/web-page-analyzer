@@ -163,19 +163,23 @@ sequenceDiagram
 
 What the error page shows:
 
-| Situation | Shown |
+| Situation | Heading shown |
 |---|---|
-| The address is not an `http` or `https` URL | 400 Bad Request |
+| The address is not an `http` or `https` URL | 400 Bad Request · Invalid address |
 | The page answers with an error | the page's own status, for example 404 Not Found |
-| Unknown host, refused connection, invalid certificate | 502 Bad Gateway, with the cause |
-| The page does not answer in time | 504 Gateway Timeout |
-| The address is not a web page (PDF, image, JSON) | 415 Unsupported Media Type |
+| The host name does not exist | 502 Bad Gateway · No such host |
+| Nothing is listening at the address | 502 Bad Gateway · Connection refused |
+| The certificate is expired, self-signed or for another host | 502 Bad Gateway · Invalid certificate |
+| The page does not answer in time | 504 Gateway Timeout · Timed out |
+| The address is not a web page (PDF, image, JSON) | 415 Unsupported Media Type · Not a web page |
 | Anything unexpected | 500 Internal Server Error |
+
+The short hint after the code names the problem; a sentence below it explains it.
 
 **Why 502 for an unknown host.** HTTP has no "no such host" code: the site never answered, so there is no status
 of its own to show. The app is acting as a gateway, so it uses the gateway codes: 502 when the site can't be
-reached, 504 when it times out. The description gives the real cause. A status the site did send (404, 503) is
-shown as it is.
+reached, 504 when it times out. The hint and the description give the real cause. A status the site did send
+(404, 503) is shown as it is.
 
 
 ## Project structure
