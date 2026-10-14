@@ -25,6 +25,7 @@ type pageData struct {
 
 type pageError struct {
 	Status      string // e.g. "404 Not Found"
+	Hint        string // e.g. "No such host", may be empty
 	Description string
 }
 

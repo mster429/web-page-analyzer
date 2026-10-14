@@ -84,19 +84,19 @@ func (h *Handler) analyzeFailed(w http.ResponseWriter, rawURL string, err error)
 	switch {
 	case errors.Is(err, analysis.ErrInvalidURL):
 		h.metrics.analyses.WithLabelValues("invalid_url").Inc()
-		h.renderError(w, rawURL, http.StatusBadRequest,
+		h.renderError(w, rawURL, http.StatusBadRequest, "Invalid address",
 			"Enter a full address that starts with http:// or https://.")
 
 	case errors.As(err, &fetchErr):
 		h.metrics.analyses.WithLabelValues("fetch_failed").Inc()
 		h.logger.Warn().Err(err).Str("url", rawURL).Msg("page could not be fetched")
 
-		h.renderError(w, rawURL, fetchStatus(fetchErr), fetchErr.Reason)
+		h.renderError(w, rawURL, fetchStatus(fetchErr), fetchErr.Hint, fetchErr.Reason)
 
 	default:
 		h.metrics.analyses.WithLabelValues("error").Inc()
 		h.logger.Error().Err(err).Str("url", rawURL).Msg("analysis failed")
-		h.renderError(w, rawURL, http.StatusInternalServerError,
+		h.renderError(w, rawURL, http.StatusInternalServerError, "",
 			"Something went wrong while analyzing the page.")
 	}
 }
@@ -114,11 +114,12 @@ func fetchStatus(err *analysis.FetchError) int {
 	return http.StatusBadGateway
 }
 
-func (h *Handler) renderError(w http.ResponseWriter, rawURL string, status int, description string) {
+func (h *Handler) renderError(w http.ResponseWriter, rawURL string, status int, hint, description string) {
 	render(w, status, pageData{
 		URL: rawURL,
 		Error: &pageError{
 			Status:      strings.TrimSpace(fmt.Sprintf("%d %s", status, http.StatusText(status))),
+			Hint:        hint,
 			Description: description,
 		},
 	})

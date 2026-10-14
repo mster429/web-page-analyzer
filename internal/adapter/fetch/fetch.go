@@ -36,12 +36,13 @@ func (f *Fetcher) Fetch(ctx context.Context, pageURL *url.URL) (analysis.Page, e
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, pageURL.String(), nil)
 	if err != nil {
-		return analysis.Page{}, &analysis.FetchError{Reason: "The address is not valid.", Err: err}
+		return analysis.Page{}, &analysis.FetchError{Hint: "Invalid address", Reason: "The address is not valid.", Err: err}
 	}
 
 	resp, err := f.client.Do(req)
 	if err != nil {
-		return analysis.Page{}, &analysis.FetchError{Reason: f.reason(err), Err: err}
+		hint, reason := f.describe(err)
+		return analysis.Page{}, &analysis.FetchError{Hint: hint, Reason: reason, Err: err}
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -57,6 +58,7 @@ func (f *Fetcher) Fetch(ctx context.Context, pageURL *url.URL) (analysis.Page, e
 	// checking content type header
 	if contentType := mediaType(resp); contentType != "" && contentType != "text/html" && contentType != "application/xhtml+xml" {
 		return analysis.Page{}, &analysis.FetchError{
+			Hint:   "Not a web page",
 			Reason: fmt.Sprintf("The address returned %s, not a web page.", contentType),
 			Err:    analysis.ErrNotHTML,
 		}
@@ -64,11 +66,11 @@ func (f *Fetcher) Fetch(ctx context.Context, pageURL *url.URL) (analysis.Page, e
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, f.maxBodySize))
 	if err != nil {
-		reason := "The page started to load but the download broke off."
+		hint, reason := "Download interrupted", "The page started to load but the download broke off."
 		if isTimeout(err) {
-			reason = f.reason(err)
+			hint, reason = f.describe(err)
 		}
-		return analysis.Page{}, &analysis.FetchError{Reason: reason, Err: err}
+		return analysis.Page{}, &analysis.FetchError{Hint: hint, Reason: reason, Err: err}
 	}
 
 	return analysis.Page{
@@ -87,22 +89,22 @@ func mediaType(resp *http.Response) string {
 	return contentType
 }
 
-// reason turns a failed request into a reason for the user.
-func (f *Fetcher) reason(err error) string {
+// describe turns a failed request into a short hint and a reason for the user.
+func (f *Fetcher) describe(err error) (hint, reason string) {
 	var dnsErr *net.DNSError
 	var certErr *tls.CertificateVerificationError
 
 	switch {
 	case isTimeout(err):
-		return fmt.Sprintf("The page did not answer within %s.", f.timeout)
+		return "Timed out", fmt.Sprintf("The page did not answer within %s.", f.timeout)
 	case errors.As(err, &dnsErr):
-		return "The host name could not be found. Check the address for typos."
+		return "No such host", "The host name could not be found. Check the address for typos."
 	case errors.Is(err, syscall.ECONNREFUSED):
-		return "The server refused the connection. Nothing seems to be running at that address."
+		return "Connection refused", "The server refused the connection. Nothing seems to be running at that address."
 	case errors.As(err, &certErr):
-		return "A secure connection could not be made because the site's certificate is not valid."
+		return "Invalid certificate", "A secure connection could not be made because the site's certificate is not valid."
 	}
-	return "The page could not be reached."
+	return "Unreachable", "The page could not be reached."
 }
 
 func isTimeout(err error) bool {

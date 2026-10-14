@@ -192,8 +192,12 @@ func TestFetch_ContentType(t *testing.T) {
 			if !errors.Is(err, analysis.ErrNotHTML) {
 				t.Fatalf("error = %v, want ErrNotHTML", err)
 			}
-			if reason := fetchError(t, err).Reason; !strings.Contains(reason, tt.contentType) {
-				t.Errorf("Reason = %q, want it to name %q", reason, tt.contentType)
+			fetchErr := fetchError(t, err)
+			if fetchErr.Hint != "Not a web page" {
+				t.Errorf("Hint = %q, want Not a web page", fetchErr.Hint)
+			}
+			if !strings.Contains(fetchErr.Reason, tt.contentType) {
+				t.Errorf("Reason = %q, want it to name %q", fetchErr.Reason, tt.contentType)
 			}
 		})
 	}
@@ -203,12 +207,13 @@ func TestFetch_Unreachable(t *testing.T) {
 	tests := []struct {
 		name       string
 		err        error
+		wantHint   string
 		wantReason string
 	}{
-		{"unknown host", &net.DNSError{Err: "no such host", Name: "nope.invalid", IsNotFound: true}, "host name could not be found"},
-		{"connection refused", &net.OpError{Op: "dial", Err: os.NewSyscallError("connect", syscall.ECONNREFUSED)}, "refused the connection"},
-		{"bad certificate", &tls.CertificateVerificationError{Err: errors.New("certificate has expired")}, "certificate is not valid"},
-		{"anything else", errors.New("connection reset by peer"), "could not be reached"},
+		{"unknown host", &net.DNSError{Err: "no such host", Name: "nope.invalid", IsNotFound: true}, "No such host", "host name could not be found"},
+		{"connection refused", &net.OpError{Op: "dial", Err: os.NewSyscallError("connect", syscall.ECONNREFUSED)}, "Connection refused", "refused the connection"},
+		{"bad certificate", &tls.CertificateVerificationError{Err: errors.New("certificate has expired")}, "Invalid certificate", "certificate is not valid"},
+		{"anything else", errors.New("connection reset by peer"), "Unreachable", "could not be reached"},
 	}
 
 	for _, tt := range tests {
@@ -222,6 +227,9 @@ func TestFetch_Unreachable(t *testing.T) {
 			fetchErr := fetchError(t, err)
 			if fetchErr.StatusCode != 0 {
 				t.Errorf("StatusCode = %d, want 0 because the page gave no answer", fetchErr.StatusCode)
+			}
+			if fetchErr.Hint != tt.wantHint {
+				t.Errorf("Hint = %q, want %q", fetchErr.Hint, tt.wantHint)
 			}
 			if !strings.Contains(fetchErr.Reason, tt.wantReason) {
 				t.Errorf("Reason = %q, want it to contain %q", fetchErr.Reason, tt.wantReason)
@@ -246,8 +254,12 @@ func TestFetch_Timeout(t *testing.T) {
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("error = %v, want a deadline error", err)
 	}
-	if reason := fetchError(t, err).Reason; !strings.Contains(reason, "did not answer within 20ms") {
-		t.Errorf("Reason = %q", reason)
+	fetchErr := fetchError(t, err)
+	if fetchErr.Hint != "Timed out" {
+		t.Errorf("Hint = %q, want Timed out", fetchErr.Hint)
+	}
+	if !strings.Contains(fetchErr.Reason, "did not answer within 20ms") {
+		t.Errorf("Reason = %q", fetchErr.Reason)
 	}
 }
 
@@ -259,12 +271,12 @@ func (b brokenBody) Close() error             { return nil }
 
 func TestFetch_BodyBreaksOff(t *testing.T) {
 	tests := []struct {
-		name       string
-		err        error
-		wantReason string
+		name     string
+		err      error
+		wantHint string
 	}{
-		{"connection lost", errors.New("unexpected EOF"), "download broke off"},
-		{"ran out of time", context.DeadlineExceeded, "did not answer within"},
+		{"connection lost", errors.New("unexpected EOF"), "Download interrupted"},
+		{"ran out of time", context.DeadlineExceeded, "Timed out"},
 	}
 
 	for _, tt := range tests {
@@ -277,8 +289,8 @@ func TestFetch_BodyBreaksOff(t *testing.T) {
 
 			_, err := fetcher.Fetch(context.Background(), mustURL(t, "https://example.com"))
 
-			if reason := fetchError(t, err).Reason; !strings.Contains(reason, tt.wantReason) {
-				t.Errorf("Reason = %q, want it to contain %q", reason, tt.wantReason)
+			if hint := fetchError(t, err).Hint; hint != tt.wantHint {
+				t.Errorf("Hint = %q, want %q", hint, tt.wantHint)
 			}
 		})
 	}
@@ -294,8 +306,8 @@ func TestFetch_BadAddress(t *testing.T) {
 	// a space in the host cannot be turned into a request
 	_, err := fetcher.Fetch(context.Background(), &url.URL{Scheme: "http", Host: "exa mple.com"})
 
-	if reason := fetchError(t, err).Reason; !strings.Contains(reason, "not valid") {
-		t.Errorf("Reason = %q", reason)
+	if hint := fetchError(t, err).Hint; hint != "Invalid address" {
+		t.Errorf("Hint = %q, want Invalid address", hint)
 	}
 	if called {
 		t.Error("no request should have been sent")

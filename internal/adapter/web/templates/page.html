@@ -20,7 +20,7 @@
 
     {{with .Error}}
     <section class="card error">
-      <h2>{{.Status}}</h2>
+      <h2>{{.Status}}{{with .Hint}} · {{.}}{{end}}</h2>
       <p>{{.Description}}</p>
     </section>
     {{end}}
@@ -105,6 +105,9 @@
       {{range .Inaccessible}}<li><a href="{{.}}" rel="noopener noreferrer">{{.}}</a></li>
       {{end}}
     </ul>
+    <p class="note">A link listed here may still open in your browser. Some sites, often those behind
+      Cloudflare, refuse requests that do not come from a real browser and answer 403 Forbidden instead.
+      Others show a friendly page for an address that is really gone, while answering 404 Not Found.</p>
   </details>
   {{end}}
   {{if .TimedOut}}

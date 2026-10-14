@@ -25,6 +25,7 @@ type Page struct {
 // FetchError says why a page could not be downloaded.
 type FetchError struct {
 	StatusCode int    // what the page answered with, 0 when it did not answer at all
+	Hint       string // a few words naming the problem, e.g. "No such host"
 	Reason     string // a reason for the user
 	Err        error
 }
