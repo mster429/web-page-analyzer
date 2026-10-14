@@ -52,7 +52,7 @@ func New() (*App, error) {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	client := &http.Client{}
+	client := &http.Client{Transport: userAgentTransport{next: http.DefaultTransport}}
 	fetcher := fetch.New(client, cfg.PageFetchTimeout, int64(cfg.PageSizeLimitMB)<<20)
 	checker := linkcheck.New(client, cfg.LinkCheckWorkers, cfg.SingleLinkCheckTimeout)
 	store := linkstore.New(linkStoreSize, linkStoreTTL)

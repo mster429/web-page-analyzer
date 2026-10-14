@@ -172,6 +172,11 @@ What the error page shows:
 | The address is not a web page (PDF, image, JSON) | 415 Unsupported Media Type |
 | Anything unexpected | 500 Internal Server Error |
 
+**Why 502 for an unknown host.** HTTP has no "no such host" code: the site never answered, so there is no status
+of its own to show. The app is acting as a gateway, so it uses the gateway codes: 502 when the site can't be
+reached, 504 when it times out. The description gives the real cause. A status the site did send (404, 503) is
+shown as it is.
+
 
 ## Project structure
 
@@ -293,8 +298,16 @@ period in Docker Compose together.
 - JavaScript is not executed, so pages built in the browser can show few headings, few links and no login form.
 - Private and local addresses are not refused. On a public deployment that is a server-side request forgery risk.
 - The links wait in memory, so only one instance of the application can run, and a restart loses pending checks.
-- Sites that require a login (401, 403) or limit requests (429) are reported as inaccessible.
-- Some sites answer 403 to Go's default `User-Agent`.
+- **Some links are reported as inaccessible although they open in a browser.** The checker only sees the status
+  code a site answers with, and there are three common reasons it differs from what a person sees:
+  - *Bot protection.* Sites behind Cloudflare and similar services (Medium, Stack Overflow and X, for example)
+    tell a real browser from a program by how the connection itself is made, and by a JavaScript check that
+    only a browser can run. They answer 403 Forbidden to everything else, whatever headers are sent.
+  - *Login or rate limits.* A page that needs a login answers 401 or 403, and a site that thinks it is getting
+    too many requests answers 429. A browser that is logged in, or that only made one request, gets the page.
+  - *Friendly error pages.* Some sites show a normal-looking page for an address that no longer exists, but
+    answer 404 Not Found with it. In that case "inaccessible" is correct.
+
 - A page larger than `PAGE_SIZE_LIMIT_MB` is analyzed up to that limit without notice.
 - Pages are assumed to be UTF-8, and `<base href>` is not honoured.
 - `/metrics` and `/debug/pprof/` are on the public port and have no authentication.

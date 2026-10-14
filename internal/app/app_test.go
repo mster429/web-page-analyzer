@@ -148,3 +148,34 @@ func TestRun_CannotListen(t *testing.T) {
 		t.Errorf("error = %q", err)
 	}
 }
+
+type roundTripFunc func(req *http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestUserAgentTransport(t *testing.T) {
+	var sent string
+	transport := userAgentTransport{next: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		sent = req.Header.Get("User-Agent")
+		return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody}, nil
+	})}
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+	req.Header.Set("User-Agent", "Go-http-client/1.1")
+
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = resp.Body.Close()
+
+	if sent != userAgent {
+		t.Errorf("User-Agent sent = %q, want %q", sent, userAgent)
+	}
+	// the caller's request must be left as it was
+	if got := req.Header.Get("User-Agent"); got != "Go-http-client/1.1" {
+		t.Errorf("the original request was changed, User-Agent is now %q", got)
+	}
+}
